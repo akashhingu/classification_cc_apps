@@ -1,0 +1,285 @@
+|                                                              |
+|--------------------------------------------------------------|
+| title: "Classification Analysis on Credit Card Applications" |
+| output: html_document                                        |
+| #date: "`r Sys.Date()`"                                      |
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 2.1
+
+In the health insurance industry we aim to classify members that are at risk for high cost and high healthcare utilization. Risk scores can be used to identify potential cost saving measures, targeted interventions, or predict healthcare expenses among other use cases. These are 5 predictors to help classify members into risk categories.
+
+1.  Demographics factors such as location, age, gender
+2.  Socionomic factors such as income level
+3.  History of previous healthcare
+4.  Lifestyle factors
+5.  Insurance policy details
+
+## Question 2.2.1
+
+**Import Packages and IDE Prep**
+
+```{r}
+#rm(list = ls())
+set.seed(2)
+library(kernlab, plyr)
+library(kknn)
+options(scipen=999)
+```
+
+**Read in Dataset(s)**
+
+```{r}
+data_with_header =
+  read.table(
+    '/Users/akashhingu/Documents/Georgia Tech/ISYE 6501/Week 1/HWK/credit_card_data-headers.txt'
+    ,header = TRUE
+  )
+head(data_with_header,5)
+```
+
+\newpage
+
+**Create KSVM Model as function that takes in parameter C and returns accuracy**
+
+```{r, tidy=TRUE}
+## creating a function for ksvm model that takes C as variable and returns accuracy
+ksvm_model_by_c = function(i) {
+  pred = list()
+  model = ksvm(
+    as.matrix(data_with_header[, 1:10]),
+    as.factor(data_with_header[, 11]),
+    type = "C-svc",
+    kernel = "vanilladot",
+    C = i,
+    scaled = TRUE
+  )
+  # see what the model predicts
+  pred <- predict(model, data_with_header[, 1:10])   
+  # see what fraction of the model’s predictions match the actual's
+  sum_prediction = sum(pred == data_with_header[, 11]) / nrow(data_with_header) 
+  return(sum_prediction)
+}
+
+ksvm_model_by_c(100) ##call ksvm model using C=100 ##accuracy
+
+```
+
+**Create for loop to try different values of C**
+
+```{r}
+# empty data frame to eventually store C values with their model accuracy predictions
+results_df = data.frame(C = numeric(), model_accuracy = numeric()) 
+for (i in c(0.1, 1,10,100,1000,10000,100000)) {
+  # loop through sequence for different orders of magnitude of C values
+  model_accuracy = ksvm_model_by_c(i) # call ksvm_model_by_c function
+  #append results to empty dataframe
+  results_df = rbind(results_df, data.frame(C = i, model_accuracy = model_accuracy)) 
+}
+#sort results df by highest sum of predictions
+results_df[order(results_df$model_accuracy, decreasing = TRUE), ] 
+
+```
+
+\newpage
+
+**Calculate KSVM Model Formula**
+
+```{r}
+  model = ksvm(
+    as.matrix(data_with_header[, 1:10]),
+    as.factor(data_with_header[, 11]),
+    type = "C-svc",
+    kernel = "vanilladot",
+    C = 100, #using 100 as C
+    scaled = TRUE
+  )
+
+# calculate a1...am
+a = colSums(model@xmatrix[[1]] * model@coef[[1]])
+a
+
+
+# calculate a0
+a0 = -model@b
+cat("a0 = ",a0)
+
+# calculate accuracy of model
+pred <- predict(model, data_with_header[, 1:10])   
+sum_prediction = sum(pred == data_with_header[, 11]) / nrow(data_with_header)
+cat("Model Accuracy: ",sum_prediction)
+
+
+```
+
+**Classifier Equation:**
+
+(-0.0010065348 x A1) + (-0.0011729048 x A2) + (-0.0016261967 x A3) + (0.0030064203 x A8) + (1.0049405641 x A9) + (-0.0028259432 x A10) + (0.0002600295 x A11) + (-0.0005349551 x A12)\
++ (-0.0012283758 x A14) + (0.1063633995 x A15) + 0.08158492 = 0
+
+This model has a 86.39% accuracy
+
+\newpage
+
+## Question 2.2.3
+
+**Looping Through KKNN Model**
+
+```{r}
+#create empty data frame to store values
+kknn_results_df = data.frame(k = numeric(), 
+                   prediction_kknn = numeric(), 
+                  actual_kknn = numeric()) 
+# for loop to test different K values by each data point
+for (k in seq(1,25,1)) {
+  for (p in seq(1,nrow(data_with_header))){
+    kknn_model = kknn(R1~.
+                      ,data_with_header[-p,]
+                      ,data_with_header[p,]
+                      ,k = k
+                      ,kernel = "optimal"
+                      ,distance = 2
+                      ,scale = TRUE
+    )
+    prediction_kknn = round(kknn_model$fitted.values) #prediction
+    actual_kknn = data_with_header[p,11] #actual
+    kknn_results_df = rbind(kknn_results_df, data.frame(k = k, prediction_kknn =                      prediction_kknn, actual_kknn = actual_kknn)) #append to data frame
+  }
+
+  
+}
+#Viewing new dataframe which contains K, predictions, and actuals from KKNN model
+head(kknn_results_df)
+tail(kknn_results_df)
+
+```
+
+```{r}
+#create empty data frame to store values
+accuracy_kknn_df_by_k = data.frame(k = numeric(), acc_kknn_by_k = numeric())
+
+#loop through K values and calculate and average accuracies for different K values from previous data frame
+for (k in unique(kknn_results_df$k)) {
+  k_values = kknn_results_df[kknn_results_df$k == k, ]
+  acc_kknn_by_k = sum(k_values$prediction_kknn == data_with_header[, 11]) /
+  nrow(data_with_header)
+  accuracy_kknn_df_by_k = rbind(accuracy_kknn_df_by_k,
+  data.frame(k = k, acc_kknn_by_k = acc_kknn_by_k))
+  
+}
+
+#sort results df by highest sum of predictions
+accuracy_kknn_df_by_k[order(accuracy_kknn_df_by_k$acc_kknn_by_k, decreasing = TRUE), ] 
+
+```
+
+**Based on the accuracy averages for the different k's choosing K = 12 will yield the highest model accuracy at 85.32%**
+
+
+## Question 3.1 a
+
+**Cross validation using Leave One Out Cross Validation (LOOCV)**
+
+```{r}
+#3.1 a -- leave one out cross validation using train.kknn()
+
+
+
+## LOOCV on train dataset
+kknn_LOOCV = train.kknn(
+  R1~.,
+  data = data_with_header,
+  kmax = 100,
+  distance = 2,
+  kernal = 'optimal',
+  scale = TRUE
+)
+
+results_df_kknn_loocv = data.frame(k = numeric(), acc = numeric()) #empty dataframe
+
+#loop through k:kmax to calculate model accuracies
+for (k in unique(seq(1,100,1))) {
+  prediction = round(kknn_LOOCV$fitted.values[[k]])
+  acc = sum(prediction == data_with_header[,11])/nrow(data_with_header)
+  results_df_kknn_loocv = rbind(results_df_kknn_loocv, data.frame(k = k, acc = acc)) 
+  
+}
+
+
+#dataframe ordered by acc desc
+results_df_kknn_loocv[order(results_df_kknn_loocv$acc, decreasing = TRUE),][1:10,]
+
+```
+
+**Using the LOOVC we find the kknn model with k = 12 has one the best accuracy at 85.32%**
+
+## Question 3.1 b
+
+```{r}
+#3.1 b
+
+##build train, validation, and test data splits 70-15-15 splits
+
+train70 = sample(nrow(data_with_header),size = nrow(data_with_header)*.70)
+train_df = data_with_header[train70,]
+
+valid_test_df = data_with_header[-train70,]
+valid_test_split = sample(nrow(valid_test_df), size = nrow(valid_test_df)*.5)
+valid_df = valid_test_df[valid_test_split,]
+test_df = valid_test_df[-valid_test_split,]
+
+
+#check df sizes
+nrow(data_with_header)
+nrow(train_df)/nrow(data_with_header)
+nrow(valid_df)/nrow(data_with_header)
+nrow(test_df)/nrow(data_with_header)
+
+##empty df
+results_df_kknn_train = data.frame(k = numeric(), acc = numeric()) 
+#Loop through different K's
+for (k in seq(1,100,1)) {
+  kknn_model = kknn(R1~.
+                    ,train_df
+                    ,valid_df
+                    ,k = k
+                    ,kernel = "optimal"
+                    ,distance = 2
+                    ,scale = TRUE
+  )
+  prediction = round(kknn_model$fitted.values)
+  acc = sum(prediction == valid_df[,11])/nrow(valid_df)
+  results_df_kknn_train = rbind(results_df_kknn_train, data.frame(k = k, acc = acc)) 
+  
+}
+
+results_df_kknn_train[order(results_df_kknn_train$acc, decreasing = TRUE),][1:10,]
+
+
+```
+
+**K = 23 has highest accuracy at 87.8%**
+
+**Use trained and validated model on test df at k = 23**
+
+```{r}
+kknn_model_tested = kknn(R1~.
+                  ,train_df
+                  ,test_df
+                  ,k = 23
+                  ,kernel = "optimal"
+                  ,distance = 2
+                  ,scale = TRUE
+)
+
+prediction = round(kknn_model_tested$fitted.values)
+acc = sum(prediction == test_df[,11])/nrow(test_df)
+acc
+
+
+```
+
+**KKNN Model (with k = 23) produces best model with accuracy at 82% on test data**
