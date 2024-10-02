@@ -11,7 +11,7 @@
 
 
 
-<title>index.knit</title>
+<title>Classification_CC_Data.knit</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -361,10 +361,28 @@ display: none;
 <td>output: html_document</td>
 </tr>
 <tr class="odd">
-<td>#date: “2024-10-02”</td>
+<td>#date: “2024-09-13”</td>
 </tr>
 </tbody>
 </table>
+<div id="question-2.1" class="section level2">
+<h2>Question 2.1</h2>
+<p>In the health insurance industry we aim to classify members that are
+at risk for high cost and high healthcare utilization. Risk scores can
+be used to identify potential cost saving measures, targeted
+interventions, or predict healthcare expenses among other use cases.
+These are 5 predictors to help classify members into risk
+categories.</p>
+<ol style="list-style-type: decimal">
+<li>Demographics factors such as location, age, gender</li>
+<li>Socionomic factors such as income level</li>
+<li>History of previous healthcare</li>
+<li>Lifestyle factors</li>
+<li>Insurance policy details</li>
+</ol>
+</div>
+<div id="question-2.2.1" class="section level2">
+<h2>Question 2.2.1</h2>
 <p><strong>Import Packages and IDE Prep</strong></p>
 <pre class="r"><code>#rm(list = ls())
 set.seed(2)
@@ -463,6 +481,9 @@ cat(&quot;Model Accuracy: &quot;,sum_prediction)</code></pre>
 + (-0.0012283758 x A14) + (0.1063633995 x A15) + 0.08158492 = 0</p>
 <p>This model has a 86.39% accuracy</p>
 <div style="page-break-after: always;"></div>
+</div>
+<div id="question-2.2.3" class="section level2">
+<h2>Question 2.2.3</h2>
 <p><strong>Looping Through KKNN Model</strong></p>
 <pre class="r"><code>#create empty data frame to store values
 kknn_results_df = data.frame(k = numeric(), 
@@ -546,6 +567,9 @@ accuracy_kknn_df_by_k[order(accuracy_kknn_df_by_k$acc_kknn_by_k, decreasing = TR
 ## 4   4     0.8149847</code></pre>
 <p><strong>Based on the accuracy averages for the different k’s choosing
 K = 12 will yield the highest model accuracy at 85.32%</strong></p>
+</div>
+<div id="question-3.1-a" class="section level2">
+<h2>Question 3.1 a</h2>
 <p><strong>Cross validation using Leave One Out Cross Validation
 (LOOCV)</strong></p>
 <pre class="r"><code>#3.1 a -- leave one out cross validation using train.kknn()
@@ -588,6 +612,9 @@ results_df_kknn_loocv[order(results_df_kknn_loocv$acc, decreasing = TRUE),][1:10
 ## 18 18 0.851682</code></pre>
 <p><strong>Using the LOOVC we find the kknn model with k = 12 has one
 the best accuracy at 85.32%</strong></p>
+</div>
+<div id="question-3.1-b" class="section level2">
+<h2>Question 3.1 b</h2>
 <pre class="r"><code>#3.1 b
 
 ##build train, validation, and test data splits 70-15-15 splits
@@ -658,6 +685,7 @@ acc</code></pre>
 <pre><code>## [1] 0.8585859</code></pre>
 <p><strong>KKNN Model (with k = 23) produces best model with accuracy at
 82% on test data</strong></p>
+</div>
 
 
 

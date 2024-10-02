@@ -8,17 +8,7 @@
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Question 2.1
 
-In the health insurance industry we aim to classify members that are at risk for high cost and high healthcare utilization. Risk scores can be used to identify potential cost saving measures, targeted interventions, or predict healthcare expenses among other use cases. These are 5 predictors to help classify members into risk categories.
-
-1.  Demographics factors such as location, age, gender
-2.  Socionomic factors such as income level
-3.  History of previous healthcare
-4.  Lifestyle factors
-5.  Insurance policy details
-
-## Question 2.2.1
 
 **Import Packages and IDE Prep**
 
@@ -124,7 +114,6 @@ This model has a 86.39% accuracy
 
 \newpage
 
-## Question 2.2.3
 
 **Looping Through KKNN Model**
 
@@ -179,7 +168,6 @@ accuracy_kknn_df_by_k[order(accuracy_kknn_df_by_k$acc_kknn_by_k, decreasing = TR
 **Based on the accuracy averages for the different k's choosing K = 12 will yield the highest model accuracy at 85.32%**
 
 
-## Question 3.1 a
 
 **Cross validation using Leave One Out Cross Validation (LOOCV)**
 
@@ -215,8 +203,6 @@ results_df_kknn_loocv[order(results_df_kknn_loocv$acc, decreasing = TRUE),][1:10
 ```
 
 **Using the LOOVC we find the kknn model with k = 12 has one the best accuracy at 85.32%**
-
-## Question 3.1 b
 
 ```{r}
 #3.1 b
